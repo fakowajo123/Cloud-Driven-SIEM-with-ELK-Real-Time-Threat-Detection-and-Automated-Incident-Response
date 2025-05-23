@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This project is a hands-on cybersecurity lab that simulates real-world attack and defense scenarios. It integrates adversary emulation, SIEM pipeline development with the ELK stack, endpoint detection, real-time log analysis, automated response, firewall architecture, and incident response workflows. The purpose is to demonstrate practical skills in building, monitoring, and defending modern network environments using both offensive and defensive security tools and techniques.
+This project is a hands-on cybersecurity lab that simulates real-world attack and defense scenarios. It integrates adversary emulation, SIEM pipeline development with the ELK stack, endpoint detection, real-time log analysis, automated response, firewall architecture, incident response workflows, and actionable security analytics.
 
 **Key skills demonstrated:**
 
@@ -46,9 +46,25 @@ This project is a hands-on cybersecurity lab that simulates real-world attack an
 
 ## Setup & Prerequisites
 
-- List all hardware, software, and cloud requirements.
-- Network setup details.
-- User permissions and security best practices.
+### Basic Requirements
+
+- **AWS Account:** An AWS account (with MFA enabled) and enough quota to launch EC2 instances for all lab components.
+- **Networking & Firewalls:** Ability to configure AWS VPC, Security Groups, and open/close required ports for EC2, RDP/SSH, and cloud services.
+- **Security & Automation:** Use AWS IAM roles and policies for access control, EC2 key pairs for instance login, Security Groups for isolation, and automate deployments with scripts or AWS CLI for consistency and speed.
+
+---
+
+### ☁️ Lab Infrastructure Overview
+
+| Role                      | OS/Distribution         | Instance Type / Specs               | Description                                       |
+|---------------------------|------------------------|-------------------------------------|---------------------------------------------------|
+| **ELK Server**            | Ubuntu 22.04           | t2.xlarge (2 vCPUs, 8 GB RAM)       | Central SIEM for log collection, analysis, and dashboards |
+| **Fleet Server**          | Ubuntu 22.04           | t2.medium (2 vCPUs, 4 GB RAM)       | Manages Elastic Agents for endpoint visibility    |
+| **Windows Target**        | Windows Server 2022    | t2.medium (2 vCPUs, 4 GB RAM)       | RDP-exposed endpoint for red team testing; hosts Kali VM for internal attack simulation |
+| **Kali (VM)**             | Kali Linux Rolling (VM)| 1 vCPU, 2 GB RAM (within Windows)   | Simulated attacker VM inside Windows target       |
+| **Ubuntu Target**         | Ubuntu 22.04           | t2.medium (2 vCPUs, 4 GB RAM)       | SSH-exposed endpoint to simulate brute-force      |
+| **Windows + osTicket**    | Windows Server 2022    | t2.medium (2 vCPUs, 4 GB RAM)       | Incident response management using osTicket       |
+| **Mythic C2 Server**      | Ubuntu 22.04           | t2.medium (2 vCPUs, 4 GB RAM)       | Hosts the Mythic Command & Control (C2) framework |
 
 ---
 
@@ -56,25 +72,115 @@ This project is a hands-on cybersecurity lab that simulates real-world attack an
 
 ### Firewall Architecture
 
-> _Describe and diagram your firewall rules and segmentation._
+> **Note:** The firewall in this lab is not only used to block or prevent unwanted access, but also to ensure that only the required and intended network connections are allowed for the proper functioning of each service and server. By explicitly defining which ports and protocols are permitted between components (such as endpoints, Fleet Server, ELK Server, osTicket, and administrative systems), the firewall enforces both security and connectivity. This approach allows necessary communication for log forwarding, agent orchestration, remote administration, and ticketing integration, while minimizing unnecessary exposure and reducing the attack surface.
+
+#### Windows Endpoint
+
+| Source       | Port(s)/Protocol | Action | Reason                                               |
+| ------------ | ---------------- | ------ | ---------------------------------------------------- |
+| 0.0.0.0/0    | TCP 3389         | Allow  | Simulate exposed RDP service for remote access       |
+| Fleet Server | TCP 8220, 8200   | Allow  | Agent-to-Fleet communication                         |
+| ELK Server   | TCP 5044, 9200   | Allow  | Send logs to Elasticsearch                           |
+| Your IP      | TCP 1–65535      | Allow  | Remote admin config (from your machine via RDP only) |
+
+#### Ubuntu Endpoint
+
+| Source       | Port(s)/Protocol | Action | Reason                                               |
+| ------------ | ---------------- | ------ | ---------------------------------------------------- |
+| 0.0.0.0/0    | TCP 22           | Allow  | Simulate exposed SSH service for brute-force testing |
+| Fleet Server | TCP 8220, 8200   | Allow  | Agent-to-Fleet communication                         |
+| ELK Server   | TCP 5044, 9200   | Allow  | Send logs to Elasticsearch                           |
+| Your IP      | TCP 1–65535      | Allow  | Remote admin/config                                  |
+
+#### ELK Server
+
+| Source            | Port(s)/Protocol | Action | Reason                                              |
+| ----------------- | ---------------- | ------ | --------------------------------------------------- |
+| Windows           | TCP 5044, 9200   | Allow  | Receive Sysmon and Defender logs via Beats or Agent |
+| Ubuntu            | TCP 5044, 9200   | Allow  | Receive `/var/log` data from Filebeat/Elastic Agent |
+| Fleet Server      | TCP 9200         | Allow  | Fleet querying and ingest coordination              |
+| OS Ticket         | TCP 1–65535      | Allow  | Ticket system access for alert/case management      |
+| Your IP           | TCP 1–65535      | Allow  | Admin/dashboard access for analytics and monitoring |
+| OS Ticket Server  | TCP 9200, 5601   | Allow  | Allow bi-directional integration between ELK stack and OS Ticket server |
+
+---
 
 ### Setup Layout
 
-> _Provide an overview of the entire setup environment._
+![Setup Layout](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/raw/main/Setup/Layout%20diagram%20.jpg)
 
 ### Attack Diagram Layout
 
-> _Visualize how attacks traverse your architecture._
+![Attack Layout](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/raw/main/Setup/Attack%20Layout%20.jpg)
 
 ---
 
 ## ELK Stack Setup & Installation
 
-- Step-by-step installation for Elasticsearch and Logstash.
+### 1. Install Java
 
-### Kibana Installation
+The ELK stack (Elasticsearch and Kibana) requires Java. Install OpenJDK 11:
 
-- How to install and configure Kibana UI for visualization.
+```bash
+sudo apt update
+sudo apt install openjdk-11-jdk -y
+```
+
+### 2. Download and Install Elasticsearch
+
+Official download page: https://www.elastic.co/downloads/elasticsearch  
+Direct download (replace version if needed):
+
+```bash
+wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.14.0-amd64.deb
+sudo dpkg -i elasticsearch-8.14.0-amd64.deb
+```
+
+Or use apt repository:
+
+```bash
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+sudo apt-get install apt-transport-https -y
+echo "deb https://artifacts.elastic.co/packages/8.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list
+sudo apt update
+sudo apt install elasticsearch -y
+```
+
+- Start and enable Elasticsearch:
+
+```bash
+sudo systemctl start elasticsearch
+sudo systemctl enable elasticsearch
+```
+
+### 3. Download and Install Kibana
+
+Official download page: https://www.elastic.co/downloads/kibana  
+Direct download (replace version if needed):
+
+```bash
+wget https://artifacts.elastic.co/downloads/kibana/kibana-8.14.0-amd64.deb
+sudo dpkg -i kibana-8.14.0-amd64.deb
+```
+
+Or use apt repository (if not already added above):
+
+```bash
+sudo apt install kibana -y
+```
+
+- Start and enable Kibana:
+
+```bash
+sudo systemctl start kibana
+sudo systemctl enable kibana
+```
+
+### 4. Access Kibana
+
+- Open your browser and go to:  
+  `http://<your-elk-server-public-ip>:5601`
+- Follow the setup instructions to complete the configuration and set passwords for built-in users.
 
 ---
 
@@ -103,42 +209,6 @@ This project is a hands-on cybersecurity lab that simulates real-world attack an
 - Simulate unauthorized RDP access attempts.
 
 ### Data Exfiltration Attack
-
-This scenario demonstrates a simulated data exfiltration attack using the Mythic Command & Control (C2) framework. The objective is to emulate an attacker leveraging stolen credentials to access and exfiltrate sensitive data from a target system.
-
-**Steps performed:**
-
-1. **Credential Theft Simulation**
-   - Used Mythic C2 to deploy an agent on the target endpoint.
-   - Executed credential dumping techniques (e.g., via Mimikatz or built-in Mythic payload modules) to extract credentials such as username and password hashes from the target machine.
-   - Captured and stored the stolen credentials within the C2 operator console for further use.
-   - _Sample Output:_
-     ```plaintext
-     [*] Retrieved credentials:
-     Username: victimuser
-     Password Hash: aad3b435b51404eeaad3b435b51404ee:5f4dcc3b5aa765d61d8327deb882cf99
-     ```
-2. **Establishing C2 Communication**
-   - Maintained persistence on the victim system using the Mythic agent.
-   - Ensured secure and covert communication back to the Mythic server for command execution and data transfer.
-
-3. **Data Discovery & Exfiltration**
-   - Enumerated directories containing sensitive files (e.g., documents, password files).
-   - Used Mythic’s file browser and download modules to exfiltrate selected files back to the C2 server.
-   - _Example command:_
-     ```plaintext
-     download C:\Users\victimuser\Documents\confidential.xlsx
-     ```
-   - Verified that the exfiltrated data appeared in the Mythic C2 file repository.
-
-4. **Detection & Logging**
-   - Monitored SIEM logs for unusual credential access and file transfer events.
-   - Created detection rules and dashboards to visualize and alert on suspicious data exfiltration activity.
-
-**Key Takeaways:**
-- Demonstrated end-to-end workflow of credential theft and data exfiltration using a modern C2 platform.
-- Showed how SIEM solutions can detect and alert on these activities in real time.
-- Highlighted the importance of monitoring lateral movement and unauthorized data access within enterprise environments.
 
 ---
 
@@ -183,22 +253,17 @@ Our aim is to make this lab approachable and educational, even if you are new to
 **Contribution Guidelines:**
 
 - **Notes & Instructions:**  
-  Every rule, dashboard, alert, and detection logic should include clear, concise notes and instructions within the configuration or as accompanying documentation. Contributors must explain what each rule does, why it is important, and how it can be tested. This helps beginners understand the purpose and usage of each component.
-
+  Every rule, dashboard, alert, and detection logic should include clear, concise notes and instructions within the configuration or as accompanying documentation. Contributors must explain what and why, not just how.
 - **Step-by-step Help:**  
   If your contribution involves a new detection rule, alert, or integration, provide a step-by-step usage and testing guide. Screenshots and examples are highly encouraged.
-
 - **AI Integration & Innovation:**  
   We encourage use of AI-driven techniques for detection, alerting, or automated response. You may propose or contribute machine learning models, anomaly detection scripts, or AI-based analytics to enhance threat detection and response. Please document your AI approach and provide usage instructions.
-
 - **Inclusivity:**  
   Please write your notes and instructions so that even those with no prior experience can follow along and contribute.
-
 - **Pull Requests:**  
   - Fork the repository and create your branch from `main`.
   - Add your feature or fix, including documentation and instructions.
   - Submit a pull request with a clear description and testing steps.
-
 - **Questions & Support:**  
   If you’re unsure about anything, open an issue or discussion, and our community will help you out!
 
