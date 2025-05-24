@@ -585,13 +585,121 @@ Below are example images showing how alerts look once triggered for different at
 
 ### OS Ticket Installation
 
-- Guide to installing and configuring OS Ticket.
+#### Deploying osTicket using XAMPP on Windows
 
-### Integration with SIEM
+You can host osTicket locally using XAMPP, which provides Apache, MySQL (MariaDB), and PHP in a single package. Below are the setup and configuration steps:
 
-- Connecting alerts/incidents to OS Ticket for ticketing and response workflow.
+1. **Download and Install XAMPP**
+   - Download XAMPP from the [official website](https://www.apachefriends.org/index.html).
+   - Run the installer and follow the prompts to install XAMPP (default options are fine).
+   - Launch XAMPP Control Panel and **start** both the Apache and MySQL services.
+
+2. **Download osTicket**
+   - Download the latest osTicket release from [osTicket Download Page](https://osticket.com/download/).
+   - Extract the osTicket archive.
+   - Copy the extracted **upload** folder and rename it (e.g., `osticket`).
+   - Move this folder to your XAMPP `htdocs` directory (usually: `C:\xampp\htdocs\osticket`).
+
+3. **Create a MySQL Database for osTicket**
+   - Open your browser and go to `http://localhost/phpmyadmin`.
+   - Click **Databases** tab.
+   - Enter a database name (e.g., `osticket`) and click **Create**.
+   - Click **User Accounts** > **Add user account**.
+     - Username: `osticketuser` (example)
+     - Host: `localhost`
+     - Password: choose a strong password
+     - Check **Create database with same name and grant all privileges** (optional)
+     - Or, grant all privileges on the `osticket` database
+   - Save the user and note the credentials.
+
+4. **Configure osTicket**
+   - In `C:\xampp\htdocs\osticket\include`, rename `ost-sampleconfig.php` to `ost-config.php`.
+   - Ensure `ost-config.php` is writable (`Right-click > Properties > Uncheck Read-only`).
+   - **Important:** After completing the osTicket installer (step 5), download the generated `ost-config.php` file if prompted by the installer, and place it inside the `include` directory of your osTicket installation (`C:\xampp\htdocs\osticket\include\ost-config.php`), replacing the existing one if necessary.
+
+5. **Run osTicket Web Installer**
+   - Open your browser and go to: `http://localhost/osticket/`
+   - Follow the installation steps:
+     - Enter your helpdesk name and admin details.
+     - For database settings:
+       - MySQL Database: `osticket`
+       - MySQL Username: `osticketuser`
+       - MySQL Password: (your password)
+       - MySQL Hostname: `localhost`
+   - Complete the installer.
+   - **When prompted by the installer, download the new `ost-config.php` and place it in the `include` directory as described above.**
+
+6. **Switch to Using Server IP Address for Network Access**
+   - After initial setup, log in to the osTicket admin panel at `http://localhost/osticket/scp/`.
+   - To allow users to access osTicket from other devices on your network:
+     - Edit the osTicket system settings and update any reference to "localhost" to your server's IP address (e.g., `192.168.1.100`).
+     - You may also need to edit the `ost-config.php` file in `C:\xampp\htdocs\osticket\include` to update the `HTTP_SERVER` or site URL variable if present.
+     - Restart Apache in XAMPP after making these changes.
+   - Users can now access osTicket using `http://<your-server-ip>/osticket/` and the admin portal at `http://<your-server-ip>/osticket/scp/`.
 
 ---
+### Integration with SIEM
+
+You can connect your SIEM (ELK Stack) to osTicket to automatically create tickets from alerts. This is commonly done using email piping, webhooks, or osTicket's API.  
+For advanced automation, you can set up a custom integration script that acts as a bridge between ELK and osTicket.
+
+#### Step-by-Step: osTicket & SIEM Integration
+
+1. **Generate an API Key in osTicket**
+   - Open your osTicket admin panel.
+   - Go to **Manage** > **API**.
+   - Click **Add New API Key**.
+   - In the **IP Address** field, enter the IP address of your ELK server (so only the ELK server can use this API key).
+   - Fill in the other required details and save.
+   - osTicket will generate an API key for you to use in integrations.
+
+2. **Set Up the Webhook Connector in Kibana**
+   - Go to **Stack Management** > **Connectors** in Kibana (make sure you are using an active trial license for 30 days to access all features).
+   - Click **Create connector** and choose **Webhook**.
+   - For the **URL**, enter your osTicket API endpoint (replace with your osTicket server's IP address):  
+     ```
+     https://<your-osticket-ip>/osticket/upload/api/tickets.xml
+     ```
+   - In the **Headers** section, add your API key:
+     - Key: `X-API-Key`
+     - Value: *your generated osTicket API key*
+   - In the **Create action** section, go to GitHub and find an example XML body payload for osTicket's API [see example below], and paste it in the body field.
+   - Save and test the connector to ensure it works.
+
+   **Example XML Payload for osTicket API:**
+   ```xml
+   <ticket>
+     <email>{{email}}</email>
+     <name>{{name}}</name>
+     <subject>{{subject}}</subject>
+     <message>{{message}}</message>
+     <ip>{{source.ip}}</ip>
+   </ticket>
+   ```
+   - Replace the placeholders with variables or hardcoded values as needed, or use Kibana mustache variables to inject alert details.
+
+3. **Automate Alert Ticket Creation**
+   - Go to your detection rule or alert in Kibana.
+   - For the **actions** section, select **Webhook** and choose your osTicket connector.
+   - Fill out the payload as above with alert-specific variables.
+   - Save the rule.
+
+4. **Test the Integration**
+   - Trigger a test alert in Kibana.
+   - Check osTicket to confirm a ticket is created with the alert details in the body.
+
+5. **Documentation**
+   - Add the script location and usage information to your project’s README or documentation.
+   - Example:  
+     ```
+     # osTicket SIEM Integration via Webhook
+     - The webhook connector is configured in Kibana to send XML payloads to osTicket's API endpoint.
+     - The API key is included as a header for authentication.
+     - Alert details are sent in the XML body to automatically create tickets.
+     ```
+
+**Tip:**  
+You can further customize the ticket body by including relevant log fields, alert metadata, and links back to your SIEM dashboards for faster incident response.
 
 ## Detection
 
