@@ -523,7 +523,7 @@ event.provider : "Microsoft-Windows-Security-Auditing" and event.code : "4624" a
 
 ### 🛎️ Creating Real-Time Alerts (Kibana)
 
-You can create real-time alerts (rules) in ELK Stack that match the custom queries above, so you are notified immediately when suspicious activity is detected. Below are step-by-step instructions for creating custom rules based on these queries:
+You can create real-time alerts (rules) in ELK Stack that match the custom queries above, so you are notified immediately when suspicious activity is detected. Below are step-by-step instructions:
 
 #### How to Create Custom Detection Rules in Kibana
 
@@ -569,9 +569,15 @@ You can create real-time alerts (rules) in ELK Stack that match the custom queri
 
 ---
 
-By simulating SSH and RDP brute-force attacks (see the Attack Simulation section above), you can observe how these queries surface malicious activity in near real-time, powering effective alerting and incident response.
+#### Example: Visual Alert Evidence
 
-_Refer to your `dashboard/` directory for ready-made panels and visuals!_
+Below are example images showing how alerts look once triggered for different attack scenarios:
+
+**SSH and RDP Brute-Force Alert Example:**  
+![SSH and RDP Alert](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/raw/main/Alerts/RDP%20and%20ssh%20ALERT%20Triggered.jpg)
+
+**C2 Command and Control Malware Alert Example:**  
+![C2 Command and Control Alert](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/raw/main/Alerts/C2%20Command%20Alert%20Triggered.jpg)
 
 ---
 
