@@ -457,6 +457,124 @@ hydra -L users.txt -P passwords.txt rdp://192.168.1.20
 
 ---
 
+### 🔎 Log Analysis & Threat Hunting: RDP and SSH Events
+
+This section describes how to analyze logs and create threat hunting queries for RDP (Windows endpoint) and SSH (Ubuntu endpoint) attack scenarios. These queries help you visualize, detect, and alert on suspicious authentication activity, such as brute-force attempts, using Kibana's powerful search and visualization features.
+
+#### Example ELK/Kibana Queries for Threat Hunting
+
+You can use the following queries in Kibana's Discover or Alerts sections:
+
+---
+
+**SSH Brute-Force Detection (Failed Logins)**
+
+```kql
+event.dataset : "ssh" and event.action : "failed_login"
+```
+- Shows all failed SSH login attempts.
+
+**SSH Multiple Failed Attempts from Single IP**
+
+```kql
+event.dataset : "ssh" and event.action : "failed_login"
+| stats count() by source.ip, user.name
+| where count() > 5
+```
+- Reveals possible brute-force sources by aggregating failed logins.
+
+**[View SSH Dashboard (Ubuntu Endpoint)](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Dashboard/Ssh%20Brute%20force%20dashboard.jpg)**
+
+---
+
+**RDP Brute-Force Detection (Failed Logins on Windows)**
+
+```kql
+event.provider : "Microsoft-Windows-Security-Auditing" and event.code : "4625" and winlog.logon.type : "10"
+```
+- Shows failed RDP (Remote Desktop) logon attempts.
+
+**RDP Multiple Failed Logons from Single IP**
+
+```kql
+event.provider : "Microsoft-Windows-Security-Auditing" and event.code : "4625" and winlog.logon.type : "10"
+| stats count() by source.ip, user.name
+| where count() > 5
+```
+- Aggregates failed RDP logons by source IP and username.
+
+**[View RDP Dashboard (Windows Endpoint)](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Dashboard/RDP%20brute%20force%20dashboard.jpg)**
+
+---
+
+**Successful SSH Logins**
+
+```kql
+event.dataset : "ssh" and event.action : "success"
+```
+
+**Successful RDP Logins**
+
+```kql
+event.provider : "Microsoft-Windows-Security-Auditing" and event.code : "4624" and winlog.logon.type : "10"
+```
+
+---
+
+### 🛎️ Creating Real-Time Alerts (Kibana)
+
+You can create real-time alerts (rules) in ELK Stack that match the custom queries above, so you are notified immediately when suspicious activity is detected. Below are step-by-step instructions for creating custom rules based on these queries:
+
+#### How to Create Custom Detection Rules in Kibana
+
+1. **Go to Stack Management**  
+   - In Kibana, navigate to **Stack Management > Rules and Connectors**.
+
+2. **Create a New Rule**
+   - Click **Create rule**.
+
+3. **Select Rule Type**
+   - Choose **Elasticsearch query** or **Threshold** rule type, depending on your use-case.
+
+4. **Configure Rule Details**
+   - **Name:** Give your rule a descriptive name (e.g., "SSH Brute Force Detection").
+   - **Index pattern:** Select the index pattern that matches your logs (e.g., `logs-*` or `filebeat-*`).
+
+5. **Add the KQL Query**  
+   - For SSH brute force, use:
+     ```kql
+     event.dataset : "ssh" and event.action : "failed_login"
+     ```
+   - For multiple SSH failed attempts from a single IP (Threshold rule example):
+     - **Field:** `source.ip`
+     - **Threshold:** more than 5 occurrences in 1 minute
+     - **Filter:** `event.dataset : "ssh" and event.action : "failed_login"`
+   - For RDP brute force, use:
+     ```kql
+     event.provider : "Microsoft-Windows-Security-Auditing" and event.code : "4625" and winlog.logon.type : "10"
+     ```
+   - For multiple RDP failed logons from a single IP (Threshold rule example):
+     - **Field:** `source.ip`
+     - **Threshold:** more than 5 occurrences in 1 minute
+     - **Filter:** `event.provider : "Microsoft-Windows-Security-Auditing" and event.code : "4625" and winlog.logon.type : "10"`
+
+6. **Set Schedule and Actions**
+   - Set the rule to check every minute (or your required interval).
+   - Configure action(s): email, Slack notification, webhook, or integration with your ticketing system (e.g., osTicket).
+
+7. **Save and Enable the Rule**
+   - Save your rule and ensure it is enabled.
+
+**Tip:** Use your dashboard images as references for visualizations and to validate your queries.
+
+---
+
+By simulating SSH and RDP brute-force attacks (see the Attack Simulation section above), you can observe how these queries surface malicious activity in near real-time, powering effective alerting and incident response.
+
+_Refer to your `dashboard/` directory for ready-made panels and visuals!_
+
+---
+
 ## OS Ticket Integration
 
 ### OS Ticket Installation
