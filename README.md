@@ -37,10 +37,8 @@ This project is a hands-on cybersecurity lab that simulates real-world attack an
 8. [OS Ticket Integration](#os-ticket-integration)
    - [OS Ticket Installation](#os-ticket-installation)
    - [Integration with SIEM](#integration-with-siem)
-9. [Detection](#detection)
-10. [Response: Automated Defense](#response-automated-defense)
-11. [Contributing](#contributing)
-12. [License](#license)
+9. [Response: Automated Defense](#response-automated-defense)
+10. [Contributing](#contributing)
 
 ---
 
@@ -760,12 +758,6 @@ For advanced automation, you can set up a custom integration script that acts as
 **Tip:**  
 You can further customize the ticket body by including relevant log fields, alert metadata, and links back to your SIEM dashboards for faster incident response.
 
-## Detection
-
-- How threats are detected using SIEM rules, correlation, and analytics.
-
----
-
 ## Response: Automated Defense
 
 Automated response in this lab leverages both EDR (Endpoint Detection and Response) and SIEM-to-osTicket integration to ensure incidents are rapidly contained and tracked for follow-up by your help desk or security team.
@@ -869,7 +861,3 @@ Our aim is to make this lab approachable and educational, even if you are new to
   If you’re unsure about anything, open an issue or discussion, and our community will help you out!
 
 ---
-
-## License
-
-> _Your chosen license._
