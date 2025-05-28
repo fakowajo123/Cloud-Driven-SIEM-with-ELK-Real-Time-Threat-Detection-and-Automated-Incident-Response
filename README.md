@@ -264,7 +264,12 @@ sudo systemctl enable kibana
   ```bash
   sudo systemctl restart kibana
   ```
+#### Example Dashboard Screenshot
 
+At the end of your ELK Stack installation and setup, you should see the main Kibana dashboard interface populated with incoming logs and visualizations.  
+_See the screenshot below for an example of what your dashboard should look like:_
+
+![Kibana Dashboard Example](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Dashboard/Kibana%20Discovery%20tab.jpg)
 ---
 
 ## Agent & Fleet Server Configuration
@@ -303,7 +308,7 @@ sudo systemctl enable kibana
   - Copy the generated enrollment command/link provided by Kibana.
   - On each target machine (Windows or Ubuntu), open the command line (CMD, PowerShell, or terminal) and **paste the enrollment command**.
   - Run the command to enroll the agent. The agent will connect to the Fleet Server, and logs from your target machines will begin streaming into your ELK Stack.
-
+![Endpoint Enrollment ](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Dashboard/Agents%20installed.jpg)
 ---
 
 ## Sysmon Configuration & Setup
@@ -401,6 +406,7 @@ hydra -L users.txt -P passwords.txt ssh://192.168.1.10
 - `-L users.txt` : File containing username list
 - `-P passwords.txt` : File containing password list
 - `ssh://192.168.1.10` : Target SSH service
+![SSh bruteforce Attack](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Screenshots/brute%20force%20attack.jpg)
 
 #### 3. Monitor in ELK
 
