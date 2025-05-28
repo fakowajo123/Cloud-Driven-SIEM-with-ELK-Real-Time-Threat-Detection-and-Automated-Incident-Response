@@ -442,7 +442,7 @@ hydra -L users.txt -P passwords.txt rdp://192.168.1.20
 - `-L users.txt` : File containing username list
 - `-P passwords.txt` : File containing password list
 - `rdp://192.168.1.20` : Target RDP service
-
+![RDP brute-force Attack ](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Screenshots/Brute%20force%20rdp.jpg)
 #### 3. Monitor in ELK
 
 - During the brute-force attempt, monitor your ELK Stack dashboards to observe and analyze the attack events as they are ingested from your endpoints.
@@ -482,6 +482,7 @@ This section demonstrates a realistic exfiltration workflow using Kali Linux and
   ./mythic-cli
   ```
 - Access the Mythic dashboard in your browser (default: `http://<mythic-server-ip>:7443`).
+- ![Mythic Dashboard ](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Screenshots/mythic%20dashboard%20.jpg)
 
 #### 4. Deploying Agents and Profiles
 - Use Mythic CLI or dashboard to pull the Apollo agent and the http C2 profile:
