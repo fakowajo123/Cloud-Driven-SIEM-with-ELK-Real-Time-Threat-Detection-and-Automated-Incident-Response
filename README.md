@@ -547,7 +547,7 @@ event.dataset : "ssh" and event.action : "failed_login"
 ```
 - Reveals possible brute-force sources by aggregating failed logins.
 
-**[View SSH Dashboard (Ubuntu Endpoint)](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Dashboard/Ssh%20Brute%20force%20dashboard.jpg)**
+![View SSH Dashboard (Ubuntu Endpoint)](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Dashboard/Ssh%20Brute%20force%20dashboard.jpg)
 
 ---
 
@@ -567,7 +567,7 @@ event.provider : "Microsoft-Windows-Security-Auditing" and event.code : "4625" a
 ```
 - Aggregates failed RDP logons by source IP and username.
 
-**[View RDP Dashboard (Windows Endpoint)](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Dashboard/RDP%20brute%20force%20dashboard.jpg)**
+[View RDP Dashboard (Windows Endpoint)](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Dashboard/RDP%20brute%20force%20dashboard.jpg)
 
 ---
 
