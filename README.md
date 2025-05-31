@@ -700,7 +700,7 @@ You can host osTicket locally using XAMPP, which provides Apache, MySQL (MariaDB
      - You may also need to edit the `ost-config.php` file in `C:\xampp\htdocs\osticket\include` to update the `HTTP_SERVER` or site URL variable if present.
      - Restart Apache in XAMPP after making these changes.
    - Users can now access osTicket using `http://<your-server-ip>/osticket/` and the admin portal at `http://<your-server-ip>/osticket/scp/`.
-
+   ![OS Ticket Login ](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Screenshots/os%20ticket%20login%20.jpg)
 ---
 ### Integration with SIEM
 
@@ -751,7 +751,7 @@ For advanced automation, you can set up a custom integration script that acts as
 4. **Test the Integration**
    - Trigger a test alert in Kibana.
    - Check osTicket to confirm a ticket is created with the alert details in the body.
-
+![OS Ticket  ](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Screenshots/os%20ticket.jpg)
 5. **Documentation**
    - Add the script location and usage information to your project’s README or documentation.
    - Example:  
@@ -783,7 +783,7 @@ Automated response in this lab leverages both EDR (Endpoint Detection and Respon
    - Click **Add Elastic Defend** and then click **Complete EDR** when prompted.
    - Assign Elastic Defend to the agent policy that is applied to your endpoints (Windows, Linux, etc).
    - This ensures that EDR capabilities (such as malware prevention, host isolation, ransomware protection, etc.) are active on all covered endpoints.
-
+![EDR](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Screenshots/Edr%20Action.jpg)
 3. **Configure Automated Response Rules**
    - In your EDR console, define policies for automated response actions, such as:
      - Isolating an endpoint upon detection of malware or ransomware.
@@ -803,7 +803,7 @@ Automated response in this lab leverages both EDR (Endpoint Detection and Respon
    - Simulate an attack (e.g., run known malware or trigger a brute-force login).
    - Confirm that the EDR agent detects the threat and takes the defined automated response (isolation, process kill, etc.).
    - Check EDR/Fleet dashboards for response event logs and status.
-
+![EDR](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Screenshots/Isolation%20Response.jpg)
 ---
 
 ### Ticket Generation for Help Desk (osTicket) from Alerts
@@ -814,7 +814,7 @@ Automated response in this lab leverages both EDR (Endpoint Detection and Respon
 2. **Automated Ticket Creation via Webhook/API**
    - The SIEM is integrated with osTicket using a webhook connector (see [Integration with SIEM](#integration-with-siem)).
    - The webhook sends alert details (host, time, type, description, recommended actions, etc.) to the osTicket API endpoint as an XML payload.
-
+![OS Ticket  ](https://github.com/fakowajo123/Cloud-Driven-SIEM-with-ELK-Real-Time-Threat-Detection-and-Automated-Incident-Response/blob/main/Screenshots/os%20ticket.jpg)
 3. **Help Desk Workflow**
    - osTicket receives the alert and creates a new ticket, assigning it to the appropriate help desk or SOC analyst queue.
    - The ticket contains all relevant alert details, including:
